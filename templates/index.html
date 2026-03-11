@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Spam Detection Web App</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Spam Detection</h1>
+        <form method="post">
+            <input type="text" name="message" placeholder="Enter your message" required>
+            <br>
+            <button type="submit">Check</button>
+        </form>
+
+        {% if prediction %}
+        <div class="result {% if prediction=='Spam' %}result-spam{% else %}result-ham{% endif %}">
+            <p><strong>Message:</strong> {{ message }}</p>
+            <p><strong>Prediction:</strong> {{ prediction }}</p>
+            {% if confidence %}
+            <p><strong>Confidence:</strong> {{ confidence }}%</p>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
