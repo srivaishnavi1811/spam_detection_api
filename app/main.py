@@ -1,34 +1,40 @@
-from app.database import engine
-from app.models import Base
-
-Base.metadata.create_all(bind=engine)
 from fastapi import FastAPI
-from pydantic import BaseModel
 import joblib
 
-# Load the trained model
-model = joblib.load("model/spam_model.pkl")
+from app.database import SessionLocal, engine
+from app.models import Base, Message
 
-# Create FastAPI app
+# Create table
+Base.metadata.create_all(bind=engine)
+
 app = FastAPI()
 
-# Define request structure
-class Message(BaseModel):
-    message: str
+# Load trained model
+model = joblib.load("model/spam_model.pkl")
 
-# Home route
-@app.get("/")
-def home():
-    return {"message": "Spam Detection API is running"}
 
-# Prediction route
 @app.post("/predict")
-def predict(data: Message):
-    prediction = model.predict([data.message])[0]
+def predict(message: str):
 
-    if prediction == 1:
-        result = "spam"
-    else:
-        result = "ham"
+    # Make prediction
+    result = model.predict([message])[0]
 
-    return {"prediction": result}
+    prediction = "spam" if result == 1 else "ham"
+
+    # Open database session
+    db = SessionLocal()
+
+    # Save message and prediction
+    new_message = Message(
+        text=message,
+        prediction=prediction
+    )
+
+    db.add(new_message)
+    db.commit()
+    db.close()
+
+    return {
+        "message": message,
+        "prediction": prediction
+    }
